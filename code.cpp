@@ -40,11 +40,11 @@ __float128 c[1048576];
 #define N(T, BR, BC, BX) naive<T>((const T *)a, (const T *)b, (T *)c, 1024, BR, BC, BX);
 void Yoshi()
 {
-#pragma GCC unroll 999
+#pragma clang loop unroll(full)
     for (int BR = 8; BR <= 128; BR <<= 1)
-#pragma GCC unroll 999
+#pragma clang loop unroll(full)
         for (int BC = 8; BC <= 128; BC <<= 1)
-#pragma GCC unroll 999
+#pragma clang loop unroll(full)
             for (int BX = 2; BX <= 32; BX <<= 1)
             {
                 cerr << BR << " " << BC << " " << BX << endl;
