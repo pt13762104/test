@@ -20,7 +20,7 @@ double naive(const T *__restrict__ a, const T *__restrict__ b, T *__restrict__ c
                 for (int n = 0; n < BR; n++)
                     for (int m = 0; m < BC; m++)
                         for (int kk = k; kk < k + BX; kk++)
-                            c[(i + n) * N + j + m] += (size_t)a[(i + n) * N + kk] * b[kk * N + j + m];
+                            c[(i + n) * N + j + m] += a[(i + n) * N + kk] * b[kk * N + j + m];
     double Gflops = (2.0 * N * N * N) / duration_cast<nanoseconds>(Clock.now() - t0).count();
     cerr << "GFLOPS (" << typeid(T).name() << "): " << Gflops << endl;
     return Gflops;
@@ -37,19 +37,26 @@ __float128 c[1048576];
 #define N(T, BR, BC, BX) naive<T>((const T *)a, (const T *)b, (T *)c, 1024, BR, BC, BX);
 void Yoshi()
 {
-#pragma GCC unroll 3
-    for (int BR = 16; BR <= 64; BR <<= 1)
-#pragma GCC unroll 3
-        for (int BC = 32; BC <= 128; BC <<= 1)
-#pragma GCC unroll 4
-            for (int BX = 4; BX <= 32; BX <<= 1)
+#pragma GCC unroll 5
+    for (int BR = 8; BR <= 128; BR <<= 1)
+#pragma GCC unroll 5
+        for (int BC = 8; BC <= 128; BC <<= 1)
+#pragma GCC unroll 5
+            for (int BX = 2; BX <= 32; BX <<= 1)
             {
-                cout << BR << " " << BC << " " << BX << endl;
+                cerr << BR << " " << BC << " " << BX << endl;
+        // AVX512-FP16 and other archs needs to be considered.
+#if defined(__aarch64__) || defined(_M_ARM64)
                 N(_Float16, BR, BC, BX)
+#endif
                 N(float, BR, BC, BX)
                 N(double, BR, BC, BX)
-                N(long double, BR, BC, BX)
             }
+#if not(defined(__aarch64__) || defined(_M_ARM64))
+    N(_Float16, 1, 1, 1)
+#endif
+    N(long double, 1, 1, 1)
+    N(__float128, 1, 1, 1)
 }
 signed main()
 {
