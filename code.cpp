@@ -32,7 +32,7 @@ void init()
 {
 }
 #if defined(__aarch64__) || defined(_M_ARM64)
-#define __float128 _Float128
+#define __float128 long double
 #endif
 __float128 a[1048576];
 __float128 b[1048576];
@@ -40,11 +40,23 @@ __float128 c[1048576];
 #define N(T, BR, BC, BX) naive<T>((const T *)a, (const T *)b, (T *)c, 1024, BR, BC, BX);
 void Yoshi()
 {
+#ifdef __clang__
 #pragma clang loop unroll(full)
+#else
+#pragma GCC unroll 1000
+#endif
     for (int BR = 8; BR <= 128; BR <<= 1)
+#ifdef __clang__
 #pragma clang loop unroll(full)
+#else
+#pragma GCC unroll 1000
+#endif
         for (int BC = 8; BC <= 128; BC <<= 1)
+#ifdef __clang__
 #pragma clang loop unroll(full)
+#else
+#pragma GCC unroll 1000
+#endif
             for (int BX = 2; BX <= 32; BX <<= 1)
             {
                 cerr << BR << " " << BC << " " << BX << endl;
@@ -59,7 +71,10 @@ void Yoshi()
     N(_Float16, 4, 4, 4)
 #endif
     N(long double, 4, 4, 4)
+// ARM64 extended precision is already FP128.
+#if not(defined(__aarch64__) || defined(_M_ARM64))
     N(__float128, 4, 4, 4)
+#endif
 }
 signed main()
 {
