@@ -7,11 +7,10 @@ using namespace chrono;
 #define problem ""
 #define multitest 0
 #define debug(x) cerr << #x << " = " << x << endl;
-#define BR 8
-#define BC 16
-#define BX 16
 chrono::high_resolution_clock Clock;
-template <typename T> double naive(const T *a, const T *b, T *c, const int N)
+template <typename T>
+double naive(const T *__restrict__ a, const T *__restrict__ b, T *__restrict__ c, const int N, const int BR,
+             const int BC, const int BX)
 {
     auto t0 = Clock.now();
     memset(c, 0, N * N * sizeof(T));
@@ -22,34 +21,32 @@ template <typename T> double naive(const T *a, const T *b, T *c, const int N)
                     for (int m = 0; m < BC; m++)
                         for (int kk = k; kk < k + BX; kk++)
                             c[(i + n) * N + j + m] += (size_t)a[(i + n) * N + kk] * b[kk * N + j + m];
-    double Gflops = (2 * 1024 * 1024 * 1024.0) / duration_cast<nanoseconds>(Clock.now() - t0).count();
-    cerr << "GFLOPS (" << typeid(T).name()
-         << "): " << (2 * 1024 * 1024 * 1024.0) / duration_cast<nanoseconds>(Clock.now() - t0).count() << endl;
+    double Gflops = (2.0 * N * N * N) / duration_cast<nanoseconds>(Clock.now() - t0).count();
+    cerr << "GFLOPS (" << typeid(T).name() << "): " << Gflops << endl;
     return Gflops;
 }
 void init()
 {
 }
-#if defined(__aarch64__) || defined(_M_ARM64)
-#define __float128 _Float128
-#endif
 __float128 a[1048576];
 __float128 b[1048576];
 __float128 c[1048576];
-#define N(T) naive<T>((const T *)a, (const T *)b, (T *)c, 1024)
+#define N(T, BR, BC, BX) naive<T>((const T *)a, (const T *)b, (T *)c, 1024, BR, BC, BX);
 void Yoshi()
 {
-    // Will be slow on non-FP16 systems.
-    double Gflops16 = N(_Float16);
-    double Gflops32 = N(float);
-    double Gflops64 = N(double);
-    // Usually 16-32x slower than double.
-    double GflopsExtended = N(long double);
-    double Gflops128 = N(__float128);
-    cout << "FP16: 1:" << Gflops32 / Gflops16 << endl;
-    cout << "FP64: 1:" << Gflops32 / Gflops64 << endl;
-    cout << "Extended: 1:" << Gflops32 / GflopsExtended << endl;
-    cout << "FP128: 1:" << Gflops32 / Gflops128 << endl;
+#pragma GCC unroll 3
+    for (int BR = 16; BR <= 64; BR <<= 1)
+#pragma GCC unroll 3
+        for (int BC = 32; BC <= 128; BC <<= 1)
+#pragma GCC unroll 4
+            for (int BX = 4; BX <= 32; BX <<= 1)
+            {
+                cout << BR << " " << BC << " " << BX << endl;
+                N(_Float16, BR, BC, BX)
+                N(float, BR, BC, BX)
+                N(double, BR, BC, BX)
+                N(long double, BR, BC, BX)
+            }
 }
 signed main()
 {
