@@ -28,6 +28,9 @@ double naive(const T *__restrict__ a, const T *__restrict__ b, T *__restrict__ c
 void init()
 {
 }
+#if defined(__aarch64__) || defined(_M_ARM64)
+#define __float128 _Float128
+#endif
 __float128 a[1048576];
 __float128 b[1048576];
 __float128 c[1048576];
