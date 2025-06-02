@@ -8,7 +8,7 @@ using namespace chrono;
 #define multitest 0
 #define debug(x) cerr << #x << " = " << x << endl;
 #define BR 32
-#define BC 128
+#define BC 64
 #define BX 8
 chrono::high_resolution_clock Clock;
 template <typename T> double naive(const T *a, const T *b, T *c, const int N)
