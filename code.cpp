@@ -8,9 +8,12 @@ using namespace chrono;
 #define multitest 0
 #define debug(x) cerr << #x << " = " << x << endl;
 chrono::high_resolution_clock Clock;
+// Force inlining to make the compiler actually compiles for all tile sizes instead of relying on a function call (which
+// gives off really poor performance).
 template <typename T>
-double naive(const T *__restrict__ a, const T *__restrict__ b, T *__restrict__ c, const int N, const int BR,
-             const int BC, const int BX)
+static inline __attribute__((always_inline)) double naive(const T *__restrict__ a, const T *__restrict__ b,
+                                                          T *__restrict__ c, const int N, const int BR, const int BC,
+                                                          const int BX)
 {
     auto t0 = Clock.now();
     memset(c, 0, N * N * sizeof(T));
@@ -37,11 +40,11 @@ __float128 c[1048576];
 #define N(T, BR, BC, BX) naive<T>((const T *)a, (const T *)b, (T *)c, 1024, BR, BC, BX);
 void Yoshi()
 {
-#pragma GCC unroll 5
+#pragma GCC unroll 999
     for (int BR = 8; BR <= 128; BR <<= 1)
-#pragma GCC unroll 5
+#pragma GCC unroll 999
         for (int BC = 8; BC <= 128; BC <<= 1)
-#pragma GCC unroll 5
+#pragma GCC unroll 999
             for (int BX = 2; BX <= 32; BX <<= 1)
             {
                 cerr << BR << " " << BC << " " << BX << endl;
@@ -53,10 +56,10 @@ void Yoshi()
                 N(double, BR, BC, BX)
             }
 #if not(defined(__aarch64__) || defined(_M_ARM64))
-    N(_Float16, 1, 1, 1)
+    N(_Float16, 4, 4, 4)
 #endif
-    N(long double, 1, 1, 1)
-    N(__float128, 1, 1, 1)
+    N(long double, 4, 4, 4)
+    N(__float128, 4, 4, 4)
 }
 signed main()
 {
