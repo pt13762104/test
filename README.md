@@ -1,0 +1,1 @@
+simple matrix multiplication tests with multiple tile sizes. Tested on gcc (15) and clang. gcc on github actions does not work well with this program.
