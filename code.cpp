@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <stdfloat>
 using namespace std;
 using namespace chrono;
 #ifndef yoshi_likes_e4
@@ -31,12 +32,9 @@ static inline __attribute__((always_inline)) double naive(const T *__restrict__ 
 void init()
 {
 }
-#if defined(__aarch64__) || defined(_M_ARM64)
-#define __float128 long double
-#endif
-__float128 a[1048576];
-__float128 b[1048576];
-__float128 c[1048576];
+float128_t a[1048576];
+float128_t b[1048576];
+float128_t c[1048576];
 #define N(T, BR, BC, BX) naive<T>((const T *)a, (const T *)b, (T *)c, 1024, BR, BC, BX);
 void Yoshi()
 {
@@ -60,21 +58,31 @@ void Yoshi()
             for (int BX = 2; BX <= 32; BX <<= 1)
             {
                 cerr << BR << " " << BC << " " << BX << endl;
+                N(int8_t, BR, BC, BX)
+                N(int16_t, BR, BC, BX)
+                N(int32_t, BR, BC, BX)
+                N(int64_t, BR, BC, BX)
+                N(uint8_t, BR, BC, BX)
+                N(uint16_t, BR, BC, BX)
+                N(uint32_t, BR, BC, BX)
+                N(uint64_t, BR, BC, BX)
         // AVX512-FP16 and other archs needs to be considered.
 #if defined(__aarch64__) || defined(_M_ARM64)
-                N(_Float16, BR, BC, BX)
+                N(float16_t, BR, BC, BX)
 #endif
+                N(bfloat16_t, BR, BC, BX)
                 N(float, BR, BC, BX)
                 N(double, BR, BC, BX)
             }
 #if not(defined(__aarch64__) || defined(_M_ARM64))
-    N(_Float16, 4, 4, 4)
+    N(float16_t, 4, 4, 4)
 #endif
     N(long double, 4, 4, 4)
 // ARM64 extended precision is already FP128.
 #if not(defined(__aarch64__) || defined(_M_ARM64))
-    N(__float128, 4, 4, 4)
+    N(float128_t, 4, 4, 4)
 #endif
+    N(__int128_t, 4, 4, 4)
 }
 signed main()
 {

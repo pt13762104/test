@@ -24,10 +24,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: clang++ code.cpp -O3 -march=native -funroll-loops
-      - name: Run a one-line script
+      - name: Build
+        run: clang++ -std=c++23 -O3 -march=native -funroll-loops code.cpp
+      - name: Run
         run: ./a.out
   build-arm:
     # The type of runner that the job will run on
@@ -38,8 +37,8 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: clang++ code.cpp -O3 -march=native -funroll-loops
-      - name: Run a one-line script
+      
+      - name: Build
+        run: clang++ -std=c++23 -O3 -march=native -funroll-loops code.cpp
+      - name: Run
         run: ./a.out
