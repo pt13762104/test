@@ -11,9 +11,9 @@ using namespace chrono;
 chrono::high_resolution_clock Clock;
 // Force inlining to make the compiler actually compiles for all tile sizes instead of relying on a function call (which
 // gives off really poor performance).
-template <typename T>
+template <typename T, typename TC>
 static inline __attribute__((always_inline)) double naive(const T *__restrict__ a, const T *__restrict__ b,
-                                                          T *__restrict__ c, const int N, const int BR, const int BC,
+                                                          TC *__restrict__ c, const int N, const int BR, const int BC,
                                                           const int BX)
 {
     auto t0 = Clock.now();
@@ -35,7 +35,7 @@ void init()
 float128_t a[1048576];
 float128_t b[1048576];
 float128_t c[1048576];
-#define N(T, BR, BC, BX) naive<T>((const T *)a, (const T *)b, (T *)c, 1024, BR, BC, BX);
+#define N(T, TC, BR, BC, BX) naive<T, TC>((const T *)a, (const T *)b, (TC *)c, 1024, BR, BC, BX);
 void Yoshi()
 {
 #ifdef __clang__
@@ -58,31 +58,36 @@ void Yoshi()
             for (int BX = 2; BX <= 32; BX <<= 1)
             {
                 cerr << BR << " " << BC << " " << BX << endl;
-                N(int8_t, BR, BC, BX)
-                N(int16_t, BR, BC, BX)
-                N(int32_t, BR, BC, BX)
-                N(int64_t, BR, BC, BX)
-                N(uint8_t, BR, BC, BX)
-                N(uint16_t, BR, BC, BX)
-                N(uint32_t, BR, BC, BX)
-                N(uint64_t, BR, BC, BX)
+                N(int8_t, int16_t, BR, BC, BX)
+                N(int16_t, int32_t, BR, BC, BX)
+                N(int32_t, int64_t, BR, BC, BX)
+                N(int64_t, int64_t, BR, BC, BX)
+                N(uint8_t, uint16_t, BR, BC, BX)
+                N(uint16_t, uint32_t, BR, BC, BX)
+                N(uint32_t, uint64_t, BR, BC, BX)
+                N(uint64_t, uint64_t, BR, BC, BX)
         // AVX512-FP16 and other archs needs to be considered.
 #if defined(__aarch64__) || defined(_M_ARM64)
-                N(float16_t, BR, BC, BX)
+                N(float16_t, float16_t, BR, BC, BX)
 #endif
-                N(bfloat16_t, BR, BC, BX)
-                N(float, BR, BC, BX)
-                N(double, BR, BC, BX)
+#if defined(ENABLE_BF16)
+                N(bfloat16_t, float32_t, BR, BC, BX)
+#endif
+                N(float32_t, float32_t, BR, BC, BX)
+                N(float64_t, float64_t, BR, BC, BX)
             }
 #if not(defined(__aarch64__) || defined(_M_ARM64))
-    N(float16_t, 4, 4, 4)
+    N(float16_t, float16_t, 4, 4, 4)
 #endif
-    N(long double, 4, 4, 4)
+#if not(defined(ENABLE_BF16))
+    N(bfloat16_t, float32_t, 4, 4, 4)
+#endif
+    N(long double, long double, 4, 4, 4)
 // ARM64 extended precision is already FP128.
 #if not(defined(__aarch64__) || defined(_M_ARM64))
-    N(float128_t, 4, 4, 4)
+    N(float128_t, float128_t, 4, 4, 4)
 #endif
-    N(__int128_t, 4, 4, 4)
+    N(__int128_t, __int128_t, 4, 4, 4)
 }
 signed main()
 {
