@@ -21,10 +21,10 @@ static inline __attribute__((always_inline)) double naive(const T *__restrict__ 
     for (int i = 0; i < N; i += BR)
         for (int j = 0; j < N; j += BC)
             for (int k = 0; k < N; k += BX)
-                for (int n = 0; n < BR; n++)
-                    for (int m = 0; m < BC; m++)
-                        for (int kk = k; kk < k + BX; kk++)
-                            c[(i + n) * N + j + m] += a[(i + n) * N + kk] * b[kk * N + j + m];
+                for (int ii = i; ii < i + BR; ii++)
+                    for (int kk = k; kk < k + BX; kk++)
+                        for (int jj = j; jj < j + BC; jj++)
+                            c[ii * N + jj] += a[ii * N + kk] * b[kk * N + jj];
     double Gflops = (2.0 * N * N * N) / duration_cast<nanoseconds>(Clock.now() - t0).count();
     cerr << "GFLOPS (" << typeid(T).name() << "): " << Gflops << endl;
     return Gflops;
@@ -43,19 +43,19 @@ void Yoshi()
 #else
 #pragma GCC unroll 1000
 #endif
-    for (int BR = 8; BR <= 128; BR <<= 1)
+    for (int BR = 64; BR <= 256; BR <<= 1)
 #ifdef __clang__
 #pragma clang loop unroll(full)
 #else
 #pragma GCC unroll 1000
 #endif
-        for (int BC = 8; BC <= 128; BC <<= 1)
+        for (int BC = 32; BC <= 256; BC <<= 1)
 #ifdef __clang__
 #pragma clang loop unroll(full)
 #else
 #pragma GCC unroll 1000
 #endif
-            for (int BX = 2; BX <= 32; BX <<= 1)
+            for (int BX = 16; BX <= 64; BX <<= 1)
             {
                 cerr << BR << " " << BC << " " << BX << endl;
                 N(int8_t, int16_t, BR, BC, BX)
